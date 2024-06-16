@@ -2,11 +2,12 @@ using Oxide.Core.Plugins;
 using UnityEngine;
 using Oxide.Core.Libraries.Covalence;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("ChickenGun", "locks", "1.0.5")]
-    [Description("Gives any gun unlimited ammo, does no damage, and spawns chickens where bullets hit. Allows players to toggle this feature.")]
+    [Info("ChickenGun", "locks", "1.0.6")]
+    [Description("Gives any gun unlimited ammo, does no damage, and spawns chickens where bullets hit. Chickens attack the closest player. Allows players to toggle this feature.")]
 
     public class ChickenGun : RustPlugin
     {
@@ -89,9 +90,42 @@ namespace Oxide.Plugins
                     {
                         chicken.Spawn();
                         timer.Once(5f, () => chicken.Kill()); // Despawn chicken after 5 seconds
+                        SetChickenTarget(chicken, hitPosition);
                     }
                 }
             }
+        }
+
+        private void SetChickenTarget(BaseEntity chicken, Vector3 position)
+        {
+            BasePlayer closestPlayer = FindClosestPlayer(position);
+            if (closestPlayer != null)
+            {
+                var npc = chicken as BaseNpc;
+                if (npc != null)
+                {
+                    npc.SetFact(BaseNpc.Facts.IsAggro, 1);
+                    npc.AttackTarget = closestPlayer;
+                }
+            }
+        }
+
+        private BasePlayer FindClosestPlayer(Vector3 position)
+        {
+            BasePlayer closestPlayer = null;
+            float closestDistance = float.MaxValue;
+
+            foreach (var player in BasePlayer.activePlayerList)
+            {
+                float distance = Vector3.Distance(player.transform.position, position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestPlayer = player;
+                }
+            }
+
+            return closestPlayer;
         }
     }
 }
