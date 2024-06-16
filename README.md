@@ -1,0 +1,2 @@
+# ChickenGun
+Another dumb plugin
